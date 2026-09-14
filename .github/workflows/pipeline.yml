@@ -1,0 +1,72 @@
+name: Tourism Project Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+
+  register-dataset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r tourism_project/model_building/requirements.txt
+      - name: Register dataset
+        run: python tourism_project/model_building/data_register.py
+
+  data-prep:
+    needs: register-dataset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r tourism_project/model_building/requirements.txt
+      - name: Run data preparation
+        run: python tourism_project/model_building/prep.py
+      # This is the "upload the train/test data back to the data space" step --
+      # under this workflow the GitHub repo is the data store, so committing
+      # the splits to main is what that upload actually looks like.
+      - name: Commit prepared train/test data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tourism_project/data/Xtrain.csv tourism_project/data/Xtest.csv \
+                  tourism_project/data/ytrain.csv tourism_project/data/ytest.csv
+          git diff --cached --quiet && echo "No data changes" || git commit -m "Update train/test data [skip ci]"
+          git push
+
+  model-training:
+    needs: data-prep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # pick up the commit data-prep just pushed, not the older commit that triggered this run
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r tourism_project/model_building/requirements.txt
+      - name: Train and select the best model
+        run: python tourism_project/model_building/train.py
+      # Streamlit Community Cloud serves the app straight from the repo, so
+      # committing the model here is what "deploys" the new version.
+      - name: Commit trained model
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tourism_project/deployment/best_tourism_package_model_v1.joblib
+          git diff --cached --quiet && echo "No model changes" || git commit -m "Update trained model [skip ci]"
+          git push
