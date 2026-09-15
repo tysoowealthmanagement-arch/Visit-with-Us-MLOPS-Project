@@ -58,7 +58,7 @@ That's it — pushing to `main` from then on redeploys the app automatically.
 ## Running locally
 
 Root `requirements.txt` is the deployment-only set (what Streamlit Cloud
-actually installs — keep it minimal). For training/EDA, install the
+actually installs). For training/EDA, install the
 model_building one too:
 
 ```bash
