@@ -72,8 +72,6 @@ streamlit run tourism_project/deployment/app.py
 
 ## Output Evaluation
 
-- GitHub repo: `https://github.com/<username>/<reponame>`
-- Streamlit app: `https://<app-name>.streamlit.app`
+- GitHub repo: `https://github.com/tysoowealthmanagement-arch/Visit-with-Us-MLOPS-Project`
+- Streamlit app: `https://visit-with-us-prediction-system.streamlit.app/`
 
-(Screenshots and links go in the Output Evaluation section of the
-notebook. Submit the notebook exported as `.html`.)
